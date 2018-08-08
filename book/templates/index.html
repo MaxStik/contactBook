@@ -1,0 +1,63 @@
+{% extends 'layout/base.html' %}
+{% load staticfiles %}
+
+{% block styles %}
+    <style>
+    #editContact{
+    display: none;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-8">
+            <table id="contacts" class="table">
+                <thead>
+                <tr>
+                    <td>#</td>
+                    <td>ФИО</td>
+                    <td>ДР</td>
+                    <td>Почта</td>
+                    <td>Телефон</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody>
+                {% for contact in contacts %}
+                    <tr>
+                        <td class="contact__id-td">{{ contact.id }}</td>
+                        <td class="contact__fio-td">{{ contact.surname }} {{ contact.name }} {{ contact.middle_name }}</td>
+                        <td class="contact__birthday-td">{{ contact.birthday|date:"Y-m-d" }}</td>
+                        <td class="contact__email-td">{{ contact.email }}</td>
+                        <td class="contact__phone-td">{{ contact.phone }}</td>
+                        <td class="contact__edit-td"><i data-contact="{{ contact.id }}" class="edit-trigger material-icons">edit</i></td>
+                        <td class="contact__delete-td"><i data-contact="{{ contact.id }}" class="material-icons delete-trigger">clear</i></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <form id="newContact" class="ajax-form">
+                <div class="newContact__error"></div>
+                  {% csrf_token %}
+                  {{ form.as_p }}
+                  <input type="submit" class="btn btn-primary" value="отправить">
+            </form>
+            <form id="editContact" class="ajax-form">
+                <div class="editContact__error"></div>
+                  {% csrf_token %}
+                  {{ edit_form.as_p }}
+                  <input type="hidden" class="btn btn-primary" value="" id="contact_id" name="contact_id">
+                  <input type="submit" class="btn btn-primary" value="Сохранить">
+                  <button type="button" class="btn btn-primary back-button__edit">Вернуться</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{% include 'index_scripts.html' %}
+{% endblock %}

@@ -1,0 +1,122 @@
+<script>
+    let table = $('#contacts').DataTable();
+    let contactForm = $("#newContact");
+    let editForm = $("#editContact");
+    $(".datepicker-field, .edit-datepicker-field").datepicker({
+        uiLibrary: 'bootstrap4',
+        dateFormat: 'yy-mm-dd'
+    });
+    contactForm.submit(function (event) {
+      contactForm.find ('input').each(function() {
+          input_value = $(this).val();
+          if (input_value.length <= 0){
+              $(".newContact__error").text("Какое-то поле не заполнено!");
+              return;
+          }
+      });
+      $.ajax({
+        url: '{% url 'ajax-add-contact' %}',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function (data) {
+          if (data.added) {
+            let result = [];
+            result.push(data.contact_id);
+            result.push(data.fio);
+            result.push(data.birthday);
+            result.push(data.email);
+            result.push(data.phone);
+            result.push("" +
+                "<i class=\"material-icons\">\n" +
+                "edit\n" +
+                "</i>"
+            );
+            result.push("" +
+                "<i class=\"material-icons\">\n" +
+                "clear\n" +
+                "</i>"
+            );
+            table.row.add(result);
+            table.draw(false);
+            $(".newContact__eror").text("");
+          }
+        }
+      });
+      event.preventDefault();
+    });
+    editForm.submit(function (event) {
+        editForm.find ('input').each(function() {
+          input_value = $(this).val();
+          if (input_value.length <= 0){
+              $(".newContact__error").text("Какое-то поле не заполнено!");
+              return false
+          }
+        });
+        $.ajax({
+            url: '{% url 'ajax-edit-contact' %}',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function (data) {
+              if (data.error === false) {
+               editForm[0].reset();
+                let contact_id = data.contact_id;
+                let row = $("[data-contact="+contact_id+"]").closest("tr");
+                row.find(".contact__id-td").text(data.contact_id);
+                let fio = data.surname + " " + data.name + " " + data.middlename;
+                row.find(".contact__fio-td").text(fio);
+                row.find(".contact__birthday-td").text(data.birthday);
+                row.find(".contact__email-td").text(data.email);
+                row.find(".contact__phone-td").text(data.phone);
+                editForm.hide();
+                contactForm.show();
+                $(".editContact__eror").text("");
+              }
+            }
+      });
+        event.preventDefault();
+    });
+    $(".edit-trigger").click(function(){
+        let contact_id = $(this).attr("data-contact");
+        $("#newContact").hide();
+        let form = $("#editContact");
+        form.show();
+        $.ajax({
+            url: '{% url 'ajax-get-contact' %}',
+            data: form.serialize() + "&contact_id=" + contact_id,
+            dataType: 'json',
+            success: function (data) {
+              if (data.error === false) {
+                  form.find("#id_name").val(data.name);
+                  form.find("#id_surname").val(data.surname);
+                  form.find("#id_middle_name").val(data.middlename);
+                  form.find("#id_email").val(data.email);
+                  form.find("#id_phone").val(data.phone);
+
+                  form.find("#id_birthday").val(data.birthday);
+                  form.find("#contact_id").val(contact_id);
+              }
+            }
+        });
+    });
+    $(".delete-trigger").click(function () {
+        contact_id = $(this).attr("data-contact");
+        $.ajax({
+            url: '{% url 'ajax-delete-contact' %}',
+            data: "contact_id=" + contact_id,
+            dataType: 'json',
+            success: function (data) {
+              if (data.error === false) {
+                  contact_id = data.contact_id;
+                  let row = $("[data-contact="+contact_id+"]").closest("tr");
+                  row.remove().draw();
+              }
+            }
+        });
+    });
+    $(".back-button__edit").click(function(){
+        editForm[0].reset();
+        editForm.hide();
+        contactForm.show();
+    });
+
+</script>
